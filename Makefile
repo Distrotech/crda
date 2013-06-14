@@ -23,20 +23,20 @@ UDEV_RULE_DIR?=/lib/udev/rules.d/
 PUBKEY_DIR?=pubkeys
 RUNTIME_PUBKEY_DIR?=/etc/wireless-regdb/pubkeys
 
-CFLAGS += -Wall -g
+SYS_CFLAGS += -Wall -g $(CFLAGS)
 
 all: all_noverify verify
 
 all_noverify: crda intersect regdbdump
 
 ifeq ($(USE_OPENSSL),1)
-CFLAGS += -DUSE_OPENSSL -DPUBKEY_DIR=\"$(RUNTIME_PUBKEY_DIR)\" `pkg-config --cflags openssl`
+SYS_CFLAGS += -DUSE_OPENSSL -DPUBKEY_DIR=\"$(RUNTIME_PUBKEY_DIR)\" `pkg-config --cflags openssl`
 LDLIBS += `pkg-config --libs openssl`
 
 reglib.o: keys-ssl.c
 
 else
-CFLAGS += -DUSE_GCRYPT
+SYS_CFLAGS += -DUSE_GCRYPT
 LDLIBS += -lgcrypt
 
 reglib.o: keys-gcrypt.c
@@ -51,17 +51,17 @@ NL3FOUND := $(shell pkg-config --atleast-version=3 libnl-3.0 && echo Y)
 NL32FOUND := $(shell pkg-config --atleast-version=3 libnl-3.2 && echo Y)
 
 ifeq ($(NL32FOUND),Y)
-CFLAGS += -DCONFIG_LIBNL30
-NLLIBS += $(shell pkg-config --libs libnl-genl-3.2)
+SYS_CFLAGS += -DCONFIG_LIBNL30
+NLLIBS += $(shell pkg-config --libs libnl-genl-3.0)
 NLLIBNAME = libnl-3.2
 else
 	ifeq ($(NL3FOUND),Y)
-	CFLAGS += -DCONFIG_LIBNL30
+	SYS_CFLAGS += -DCONFIG_LIBNL30
 	NLLIBS += $(shell pkg-config --libs libnl-genl-3.0)
 	NLLIBNAME = libnl-3.0
 	else
 		ifeq ($(NL2FOUND),Y)
-		CFLAGS += -DCONFIG_LIBNL20
+		SYS_CFLAGS += -DCONFIG_LIBNL20
 		NLLIBS += -lnl-genl
 		NLLIBNAME = libnl-2.0
 		else
@@ -77,7 +77,7 @@ $(error Cannot find development files for any supported version of libnl)
 endif
 
 NLLIBS += `pkg-config --libs $(NLLIBNAME)`
-CFLAGS += `pkg-config --cflags $(NLLIBNAME)`
+SYS_CFLAGS += `pkg-config --cflags $(NLLIBNAME)`
 
 ifeq ($(V),1)
 Q=
@@ -107,19 +107,19 @@ keys-%.c: utils/key2pub.py $(wildcard $(PUBKEY_DIR)/*.pem)
 
 %.o: %.c regdb.h reglib.h
 	$(NQ) '  CC  ' $@
-	$(Q)$(CC) -c $(CPPFLAGS) $(CFLAGS) -o $@ $<
+	$(Q)$(CC) -c $(CPPFLAGS) $(SYS_CFLAGS) -o $@ $<
 
 crda: reglib.o crda.o
 	$(NQ) '  LD  ' $@
-	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS) $(NLLIBS)
+	$(Q)$(CC) $(SYS_CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS) $(NLLIBS)
 
 regdbdump: reglib.o regdbdump.o print-regdom.o
 	$(NQ) '  LD  ' $@
-	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+	$(Q)$(CC) $(SYS_CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 intersect: reglib.o intersect.o print-regdom.o
 	$(NQ) '  LD  ' $@
-	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+	$(Q)$(CC) $(SYS_CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 verify: $(REG_BIN) regdbdump
 	$(NQ) '  CHK  $(REG_BIN)'
