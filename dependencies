@@ -3,9 +3,9 @@
 
 # platform_get_device_id()
 ATH9K_AHB 2.6.30
-BT 2.6.27
-BT_RFCOMM_TTY 2.6.33
-BT_HIDP 2.6.28
+BT 2.6.39
+BT_RFCOMM_TTY 2.6.39
+BT_HIDP 2.6.39
 BT_WILINK 2.6.39
 
 MAC80211_HWSIM 2.6.31
@@ -221,7 +221,7 @@ BRCMDBG 2.6.30
 # kernel 2.6.33, so depend on that. We could instead
 # backport it, but I can't test that and this is a
 # lot easier right now.
-BT_HIDP 2.6.33
+BT_HIDP 2.6.39
 
 # NFC core needs PF_NFC defined in socket.h which was
 # only introduced in kernel 3.1
